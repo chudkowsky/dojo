@@ -41,6 +41,8 @@ use starknet::core::types::{
     TransactionExecutionStatus, TransactionStatus, TransactionTrace,
 };
 
+use crate::forked_client::{ForkedClient, ForkedClientFactory};
+
 pub struct StarknetApi<EF: ExecutorFactory> {
     inner: Arc<StarknetApiInner<EF>>,
 }
@@ -53,6 +55,7 @@ impl<EF: ExecutorFactory> Clone for StarknetApi<EF> {
 
 struct StarknetApiInner<EF: ExecutorFactory> {
     sequencer: Arc<KatanaSequencer<EF>>,
+    forked_client: Option<ForkedClientFactory>,
     blocking_task_pool: BlockingTaskPool,
 }
 
@@ -60,7 +63,8 @@ impl<EF: ExecutorFactory> StarknetApi<EF> {
     pub fn new(sequencer: Arc<KatanaSequencer<EF>>) -> Self {
         let blocking_task_pool =
             BlockingTaskPool::new().expect("failed to create blocking task pool");
-        Self { inner: Arc::new(StarknetApiInner { sequencer, blocking_task_pool }) }
+        let inner = StarknetApiInner { sequencer, blocking_task_pool, forked_client: None };
+        Self { inner: Arc::new(inner) }
     }
 
     async fn on_cpu_blocking_task<F, T>(&self, func: F) -> T
@@ -282,7 +286,20 @@ impl<EF: ExecutorFactory> StarknetApiServer for StarknetApi<EF> {
                     .map_err(StarknetApiError::from)?
             };
 
-            Ok(tx.ok_or(StarknetApiError::InvalidTxnIndex)?.into())
+            match tx {
+                Some(tx) => Ok(tx.into()),
+                None => {
+                    if let Some(factory) = this.inner.forked_client {
+                        let provider = this.inner.sequencer.backend().blockchain.provider();
+                        let client = factory.with_provider(provider);
+                        // check that the block id is smaller or equal to the forked block id
+                    } else {
+                        Err(StarknetApiError::InvalidTxnIndex.into())
+                    }
+                }
+            }
+
+            // Ok(tx.ok_or(StarknetApiError::InvalidTxnIndex)?.into())
         })
         .await
     }

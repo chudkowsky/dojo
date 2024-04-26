@@ -2,6 +2,7 @@
 
 pub mod config;
 pub mod dev;
+mod forked_client;
 pub mod katana;
 pub mod metrics;
 pub mod saya;
