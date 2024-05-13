@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 use alloy_primitives::U256;
-use derive_more::{Deref, DerefMut};
+use derive_more::{Deref, DerefMut, From};
 use rand::rngs::SmallRng;
 use rand::{RngCore, SeedableRng};
 use serde::{Deserialize, Serialize};
@@ -68,7 +68,7 @@ impl GenesisAllocation {
 }
 
 /// Genesis allocation for account contract.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, From)]
 #[serde(untagged)]
 pub enum GenesisAccountAlloc {
     /// Account contract with hidden private key.
@@ -213,12 +213,6 @@ impl GenesisAccount {
     ) -> (ContractAddress, Self) {
         let (address, account) = Self::new(public_key, class_hash);
         (address, Self { balance: Some(balance), ..account })
-    }
-}
-
-impl From<DevGenesisAccount> for GenesisAllocation {
-    fn from(value: DevGenesisAccount) -> Self {
-        Self::Account(GenesisAccountAlloc::DevAccount(value))
     }
 }
 

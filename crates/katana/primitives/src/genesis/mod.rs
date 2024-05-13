@@ -1,4 +1,5 @@
 pub mod allocation;
+mod builder;
 pub mod constant;
 pub mod json;
 
@@ -7,6 +8,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use alloy_primitives::U256;
+pub use builder::{Builder as GenesisBuilder, GenesisBuilderError};
 use serde::{Deserialize, Serialize};
 use starknet::core::serde::unsigned_field_element::UfeHex;
 use starknet::core::utils::cairo_short_string_to_felt;
@@ -32,7 +34,7 @@ use crate::version::CURRENT_STARKNET_VERSION;
 use crate::FieldElement;
 
 #[serde_with::serde_as]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct FeeTokenConfig {
     /// The name of the fee token.
     pub name: String,
@@ -64,7 +66,7 @@ pub struct GenesisClass {
 }
 
 /// The configuration of the universal deployer contract.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct UniversalDeployerConfig {
     /// The class hash of the universal deployer contract.
     pub class_hash: ClassHash,
