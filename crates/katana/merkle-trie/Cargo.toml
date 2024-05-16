@@ -10,3 +10,4 @@ version.workspace = true
 
 [dependencies]
 bonsai-trie = { git = "https://github.com/dojoengine/bonsai-trie", rev = "b6a99ff" }
+katana-db.workspace = true
