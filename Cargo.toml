@@ -18,6 +18,7 @@ members = [
     "crates/dojo-world/abigen",
     "crates/katana/core",
     "crates/katana/executor",
+    "crates/katana/merkle-trie",
     "crates/katana/primitives",
     "crates/katana/rpc/rpc",
     "crates/katana/rpc/rpc-api",
@@ -74,6 +75,7 @@ katana-codecs-derive = { path = "crates/katana/storage/codecs/derive" }
 katana-core = { path = "crates/katana/core", default-features = false }
 katana-db = { path = "crates/katana/storage/db" }
 katana-executor = { path = "crates/katana/executor", default-features = false }
+katana-merkle-trie = { path = "crates/katana/merkle-trie" }
 katana-primitives = { path = "crates/katana/primitives" }
 katana-provider = { path = "crates/katana/storage/provider" }
 katana-rpc = { path = "crates/katana/rpc/rpc" }

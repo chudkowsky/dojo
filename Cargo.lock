@@ -6889,6 +6889,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "katana-merkle-trie"
+version = "0.7.0-alpha.2"
+
+[[package]]
 name = "katana-primitives"
 version = "0.7.0-alpha.2"
 dependencies = [
