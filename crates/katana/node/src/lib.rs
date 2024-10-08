@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Result;
-use dojo_metrics::prometheus_exporter::PrometheusHandle;
+use dojo_metrics::prometheus_exporter::{PrometheusHandle, PrometheusRecorder, ServerBuilder};
 use dojo_metrics::{metrics_process, prometheus_exporter, Report};
 use hyper::{Method, Uri};
 use jsonrpsee::server::middleware::proxy_get_request::ProxyGetRequestLayer;
@@ -166,7 +166,7 @@ pub async fn build(
 ) -> Result<Node> {
     // Metrics recorder must be initialized before calling any of the metrics macros, in order
     // for it to be registered.
-    let prometheus_handle = prometheus_exporter::install_recorder("katana")?;
+    let metrics_server = dojo_metrics::ServerBuilder::new("katana")?;
 
     // --- build executor factory
 
@@ -280,7 +280,7 @@ pub async fn build(
         server_config,
         block_producer,
         sequencer_config,
-        prometheus_handle,
+        prometheus_handle: metrics_server,
         task_manager: TaskManager::current(),
     };
 
