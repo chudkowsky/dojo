@@ -48,7 +48,7 @@ pub mod error;
 pub mod macros;
 pub mod prover;
 pub mod verifier;
-
+pub mod snos_input;
 pub(crate) const LOG_TARGET: &str = "saya::core";
 
 /// Saya's main configuration.

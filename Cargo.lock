@@ -7263,7 +7263,7 @@ dependencies = [
  "iana-time-zone-haiku",
  "js-sys",
  "wasm-bindgen",
- "windows-core 0.52.0",
+ "windows-core 0.51.1",
 ]
 
 [[package]]
@@ -11934,6 +11934,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "rpc-client"
+version = "0.1.0"
+source = "git+https://github.com/keep-starknet-strange/snos.git?rev=af74c7599231c25ad9c342f6888668680a9782d9#af74c7599231c25ad9c342f6888668680a9782d9"
+dependencies = [
+ "log",
+ "reqwest 0.11.27",
+ "serde",
+ "serde_json",
+ "starknet 0.11.0",
+ "starknet-os",
+ "starknet-types-core",
+ "thiserror",
+]
+
+[[package]]
+name = "rpc-replay"
+version = "0.1.0"
+source = "git+https://github.com/keep-starknet-strange/snos.git?rev=af74c7599231c25ad9c342f6888668680a9782d9#af74c7599231c25ad9c342f6888668680a9782d9"
+dependencies = [
+ "blockifier 0.8.0-rc.3 (git+https://github.com/Moonsong-Labs/sequencer?rev=6624e910c57db9a16f1607c1ed26f7d8f1114e73)",
+ "cairo-lang-starknet-classes",
+ "rpc-client",
+ "serde",
+ "serde_json",
+ "starknet 0.11.0",
+ "starknet-os-types",
+ "starknet_api 0.13.0-rc.1 (git+https://github.com/Moonsong-Labs/sequencer?rev=6624e910c57db9a16f1607c1ed26f7d8f1114e73)",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "rsa"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12521,6 +12553,8 @@ dependencies = [
  "katana-rpc-types",
  "prover-sdk",
  "reqwest 0.12.8",
+ "rpc-client",
+ "rpc-replay",
  "saya-provider",
  "serde",
  "serde-felt",
@@ -12528,6 +12562,8 @@ dependencies = [
  "starknet 0.12.0",
  "starknet-crypto 0.7.2",
  "starknet-os",
+ "starknet-os-types",
+ "starknet-providers 0.12.0",
  "starknet_api 0.13.0-rc.1 (git+https://github.com/Moonsong-Labs/sequencer?rev=6624e910c57db9a16f1607c1ed26f7d8f1114e73)",
  "tempdir",
  "thiserror",
@@ -16738,15 +16774,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1f8cf84f35d2db49a46868f947758c7a1138116f7fac3bc844f43ade1292e64"
 dependencies = [
  "windows-targets 0.48.5",
-]
-
-[[package]]
-name = "windows-core"
-version = "0.52.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33ab640c8d7e35bf8ba19b884ba838ceb4fba93a4e8c65a9059d08afcfc683d9"
-dependencies = [
- "windows-targets 0.52.6",
 ]
 
 [[package]]

@@ -22,6 +22,9 @@ serde.workspace = true
 serde_json.workspace = true
 starknet-crypto.workspace = true
 starknet-os.workspace = true
+rpc-client.workspace = true
+starknet-os-types.workspace = true
+rpc-replay.workspace = true
 starknet.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
@@ -41,6 +44,6 @@ reqwest.workspace = true
 serde-felt = { git = "https://github.com/cartridge-gg/cairo-proof-parser.git", rev = "f175d58" }
 starknet_api = { git = "https://github.com/Moonsong-Labs/sequencer", rev = "6624e910c57db9a16f1607c1ed26f7d8f1114e73", features = [ "testing" ] }
 tempdir = "0.3.7"
-
+starknet-providers = "0.12.0"
 [patch.'https://github.com/Moonsong-Labs/cairo-vm']
 cairo-vm = { git = "https://github.com/matzayonc/cairo-vm.git", rev = "59ceafbe7a10e03d41415994984e2578207172d3" }
