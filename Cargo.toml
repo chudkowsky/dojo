@@ -192,10 +192,10 @@ serde_with = "3.9.0"
 similar-asserts = "1.5.0"
 smol_str = { version = "0.2.0", features = [ "serde" ] }
 sqlx = { version = "0.7.2", features = [ "chrono", "macros", "regexp", "runtime-async-std", "runtime-tokio", "sqlite", "uuid" ] }
-starknet-os = { git = "https://github.com/keep-starknet-strange/snos.git", rev = "af74c7599231c25ad9c342f6888668680a9782d9" }
-rpc-client = { git = "https://github.com/keep-starknet-strange/snos.git", rev = "af74c7599231c25ad9c342f6888668680a9782d9" }
-starknet-os-types = { git = "https://github.com/keep-starknet-strange/snos.git", rev = "af74c7599231c25ad9c342f6888668680a9782d9" }
-rpc-replay = { git = "https://github.com/keep-starknet-strange/snos.git", rev = "af74c7599231c25ad9c342f6888668680a9782d9" }
+starknet-os = { git = "https://github.com/chudkowsky/snos.git", rev = "bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f" }
+rpc-client = { git = "https://github.com/chudkowsky/snos.git", rev = "bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f" }
+starknet-os-types = { git = "https://github.com/chudkowsky/snos.git", rev = "bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f" }
+rpc-replay = { git = "https://github.com/chudkowsky/snos.git", rev = "bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f" }
 
 starknet_api = "0.11.0"
 strum = "0.25"

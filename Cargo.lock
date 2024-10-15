@@ -3174,7 +3174,7 @@ dependencies = [
 [[package]]
 name = "cairo-type-derive"
 version = "0.1.0"
-source = "git+https://github.com/keep-starknet-strange/snos.git?rev=af74c7599231c25ad9c342f6888668680a9782d9#af74c7599231c25ad9c342f6888668680a9782d9"
+source = "git+https://github.com/chudkowsky/snos.git?rev=bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f#bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -11936,13 +11936,13 @@ dependencies = [
 [[package]]
 name = "rpc-client"
 version = "0.1.0"
-source = "git+https://github.com/keep-starknet-strange/snos.git?rev=af74c7599231c25ad9c342f6888668680a9782d9#af74c7599231c25ad9c342f6888668680a9782d9"
+source = "git+https://github.com/chudkowsky/snos.git?rev=bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f#bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f"
 dependencies = [
  "log",
  "reqwest 0.11.27",
  "serde",
  "serde_json",
- "starknet 0.11.0",
+ "starknet 0.12.0",
  "starknet-os",
  "starknet-types-core",
  "thiserror",
@@ -11951,14 +11951,14 @@ dependencies = [
 [[package]]
 name = "rpc-replay"
 version = "0.1.0"
-source = "git+https://github.com/keep-starknet-strange/snos.git?rev=af74c7599231c25ad9c342f6888668680a9782d9#af74c7599231c25ad9c342f6888668680a9782d9"
+source = "git+https://github.com/chudkowsky/snos.git?rev=bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f#bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f"
 dependencies = [
  "blockifier 0.8.0-rc.3 (git+https://github.com/Moonsong-Labs/sequencer?rev=6624e910c57db9a16f1607c1ed26f7d8f1114e73)",
  "cairo-lang-starknet-classes",
  "rpc-client",
  "serde",
  "serde_json",
- "starknet 0.11.0",
+ "starknet 0.12.0",
  "starknet-os-types",
  "starknet_api 0.13.0-rc.1 (git+https://github.com/Moonsong-Labs/sequencer?rev=6624e910c57db9a16f1607c1ed26f7d8f1114e73)",
  "thiserror",
@@ -14196,7 +14196,7 @@ dependencies = [
 [[package]]
 name = "starknet-os"
 version = "0.1.0"
-source = "git+https://github.com/keep-starknet-strange/snos.git?rev=af74c7599231c25ad9c342f6888668680a9782d9#af74c7599231c25ad9c342f6888668680a9782d9"
+source = "git+https://github.com/chudkowsky/snos.git?rev=bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f#bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f"
 dependencies = [
  "anyhow",
  "ark-ec",
@@ -14245,7 +14245,7 @@ dependencies = [
 [[package]]
 name = "starknet-os-types"
 version = "0.1.0"
-source = "git+https://github.com/keep-starknet-strange/snos.git?rev=af74c7599231c25ad9c342f6888668680a9782d9#af74c7599231c25ad9c342f6888668680a9782d9"
+source = "git+https://github.com/chudkowsky/snos.git?rev=bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f#bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f"
 dependencies = [
  "blockifier 0.8.0-rc.3 (git+https://github.com/Moonsong-Labs/sequencer?rev=6624e910c57db9a16f1607c1ed26f7d8f1114e73)",
  "cairo-lang-starknet-classes",
@@ -14255,7 +14255,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with 3.11.0",
- "starknet-core 0.11.1",
+ "starknet-core 0.12.0",
  "starknet-crypto 0.6.2",
  "starknet-gateway-types",
  "starknet-types-core",
