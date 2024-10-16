@@ -18,6 +18,11 @@ bigdecimal.workspace = true
 dojo-utils.workspace = true
 futures.workspace = true
 itertools.workspace = true
+pathfinder-common.workspace = true
+pathfinder-crypto.workspace = true
+pathfinder-merkle-tree.workspace = true
+pathfinder-storage.workspace = true
+prove_block.workspace = true
 rpc-client.workspace = true
 rpc-replay.workspace = true
 serde.workspace = true
@@ -33,6 +38,8 @@ url.workspace = true
 # TODO: use features for each possible DA.
 celestia-rpc = "0.4.0"
 celestia-types = "0.5.0"
+
+bitvec = "1.0.1"
 
 blockifier = { git = "https://github.com/Moonsong-Labs/sequencer", rev = "6624e910c57db9a16f1607c1ed26f7d8f1114e73", features = [ "testing" ] }
 cairo-proof-parser = { git = "https://github.com/cartridge-gg/cairo-proof-parser.git", rev = "f175d58" }

@@ -191,12 +191,7 @@ serde_json = { version = "1.0", features = [ "arbitrary_precision" ] }
 serde_with = "3.9.0"
 similar-asserts = "1.5.0"
 smol_str = { version = "0.2.0", features = [ "serde" ] }
-sqlx = { version = "0.7.2", features = [ "chrono", "macros", "regexp", "runtime-async-std", "runtime-tokio", "sqlite", "uuid" ] }
-starknet-os = { git = "https://github.com/chudkowsky/snos.git", rev = "bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f" }
-rpc-client = { git = "https://github.com/chudkowsky/snos.git", rev = "bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f" }
-starknet-os-types = { git = "https://github.com/chudkowsky/snos.git", rev = "bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f" }
-rpc-replay = { git = "https://github.com/chudkowsky/snos.git", rev = "bc2cad74d26159d8cf3a5d7590ddfcb099d06a7f" }
-
+sqlx = { version = "0.8.2", features = [ "chrono", "macros", "regexp", "runtime-async-std", "runtime-tokio", "sqlite", "uuid" ] }
 starknet_api = "0.11.0"
 strum = "0.25"
 strum_macros = "0.25"
@@ -213,6 +208,17 @@ tracing-log = "0.1.3"
 tracing-subscriber = { version = "0.3.16", features = [ "env-filter", "json" ] }
 url = { version = "2.4.0", features = [ "serde" ] }
 walkdir = "2.5.0"
+
+# snos
+pathfinder-common = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
+pathfinder-crypto = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
+pathfinder-merkle-tree = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
+pathfinder-storage = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
+prove_block = { git = "https://github.com/matzayonc/snos.git", rev = "463603849b6dfdabae2ef55a887e83ff2a3c3efd" }
+rpc-client = { git = "https://github.com/matzayonc/snos.git", rev = "463603849b6dfdabae2ef55a887e83ff2a3c3efd" }
+rpc-replay = { git = "https://github.com/matzayonc/snos.git", rev = "463603849b6dfdabae2ef55a887e83ff2a3c3efd" }
+starknet-os = { git = "https://github.com/matzayonc/snos.git", rev = "463603849b6dfdabae2ef55a887e83ff2a3c3efd" }
+starknet-os-types = { git = "https://github.com/matzayonc/snos.git", rev = "463603849b6dfdabae2ef55a887e83ff2a3c3efd" }
 
 # server
 hyper = "0.14.27"

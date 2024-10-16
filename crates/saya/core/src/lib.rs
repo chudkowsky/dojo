@@ -47,9 +47,9 @@ pub mod dojo_os;
 pub mod error;
 pub mod macros;
 pub mod prover;
+pub mod snos;
 pub mod snos_input;
 pub mod verifier;
-pub mod snos;
 
 pub(crate) const LOG_TARGET: &str = "saya::core";
 
