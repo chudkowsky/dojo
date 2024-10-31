@@ -26,8 +26,8 @@ pub enum Error {
     TransactionRejected(String),
     #[error("{0}")]
     TransactionFailed(String),
-    #[error(transparent)]
-    SerdeFeltError(#[from] serde_felt::Error),
+    // #[error(transparent)]
+    // SerdeFeltError(#[from] serde_felt::Error),
     #[error(transparent)]
     IoError(#[from] std::io::Error),
     #[error(transparent)]
@@ -50,8 +50,8 @@ pub enum ProverError {
     RequestError(#[from] reqwest::Error),
     #[error("Failed to convert calls to felts: {0}")]
     SerdeFeltError(String),
-    #[error(transparent)]
-    SharpError(#[from] herodotus_sharp_playground::SharpSdkError),
+    // #[error(transparent)]
+    // SharpError(#[from] herodotus_sharp_playground::SharpSdkError),
     #[error(transparent)]
     Cairo1PlaygroundError(#[from] cairo1_playground::error::Error),
     #[error("Failed to send transaction: {0}")]

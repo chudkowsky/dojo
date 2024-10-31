@@ -5,10 +5,6 @@ use bitvec::order::Msb0;
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::Felt252;
 use katana_primitives::ContractAddress;
-use pathfinder_common::StorageAddress;
-use pathfinder_crypto::Felt;
-use pathfinder_merkle_tree::ContractsStorageTree;
-use pathfinder_merkle_tree::tree::MerkleTree;
 use prove_block::compute_class_commitment;
 use prove_block::reexecute::{
     ProverPerContractStorage, format_commitment_facts, reexecute_transactions_with_blockifier,
@@ -23,6 +19,7 @@ use starknet::core::types::{
     BlockId, MaybePendingBlockWithTxHashes, MaybePendingBlockWithTxs, StarknetError,
 };
 use starknet::providers::{Provider, ProviderError};
+use starknet_crypto::pedersen_hash;
 use starknet_os::config::{STORED_BLOCK_HASH_BUFFER, StarknetGeneralConfig, StarknetOsConfig};
 use starknet_os::crypto::pedersen::PedersenHash;
 use starknet_os::execution::helper::ContractStorageMap;
@@ -165,6 +162,9 @@ async fn prepare_snos_input(block_number: u64) -> StarknetOsInput {
     // let contract_address = ContractAddress(Felt252::ZERO);
     // let storage_proof = merkle_tree.get_proof(0, &contract_address, key);
     // let contract_data = ContractsStorageTree::empty(&tx, Height(251));
+
+    let storage: HashMap<StorageKey, _> = HashMap::new();
+    use storage : papyrus_storage::Storage =storage.into();
 
     let storage_proofs =
         get_storage_proofs(&rpc_client, block_number, &tx_execution_infos, old_block_number)
@@ -347,5 +347,5 @@ async fn prepare_snos_input(block_number: u64) -> StarknetOsInput {
 
 #[tokio::test]
 async fn test_prepare_snos_input() {
-    prepare_snos_input(239242).await;
+    prepare_snos_input(239237).await;
 }

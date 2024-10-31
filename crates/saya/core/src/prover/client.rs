@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use cairo1_playground::get_cairo_pie;
-use herodotus_sharp_playground::SharpSdk;
+// use herodotus_sharp_playground::SharpSdk;
 use prover_sdk::access_key::ProverAccessKey;
 use prover_sdk::errors::SdkErrors;
 use prover_sdk::sdk::ProverSDK;
@@ -10,8 +10,8 @@ use starknet::core::types::Felt;
 use tracing::trace;
 use url::Url;
 
-use super::loader::{load_program, prepare_input_cairo};
 use super::ProveProgram;
+use super::loader::{load_program, prepare_input_cairo};
 use crate::error::ProverError;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -57,32 +57,33 @@ pub async fn sharp_prove(
         calls,
     )?;
     trace!("output: {:?}", output);
-    let sdk = SharpSdk { api_key };
-    let response = sdk
-        .proof_generation(
-            "recursive".to_string(),
-            true,
-            pie_file_path.to_str().unwrap().to_string(),
-        )
-        .await?;
+    todo!("Fix cairo1-playground");
+    // let sdk = SharpSdk { api_key };
+    // let response = sdk
+    //     .proof_generation(
+    //         "recursive".to_string(),
+    //         true,
+    //         pie_file_path.to_str().unwrap().to_string(),
+    //     )
+    //     .await?;
 
-    let proof_path = loop {
-        let status = sdk.get_sharp_query_jobs(response.sharp_query_id.clone()).await?;
+    // let proof_path = loop {
+    //     let status = sdk.get_sharp_query_jobs(response.sharp_query_id.clone()).await?;
 
-        if let Some(context) = &status.jobs[0].context {
-            if let Some(proof_path) = &context.proof_path {
-                break proof_path.clone();
-            }
-        }
-        tokio::time::sleep(tokio::time::Duration::from_secs(20)).await;
-    };
+    //     if let Some(context) = &status.jobs[0].context {
+    //         if let Some(proof_path) = &context.proof_path {
+    //             break proof_path.clone();
+    //         }
+    //     }
+    //     tokio::time::sleep(tokio::time::Duration::from_secs(20)).await;
+    // };
 
-    let proof = sdk.get_proof(proof_path).await?;
-    Ok(ProverResult {
-        proof: proof.proof,
-        serialized_proof: proof.serialized_proof,
-        program_hash: proof.program_hash,
-        program_output: proof.program_output,
-        program_output_hash: proof.program_output_hash,
-    })
+    // let proof = sdk.get_proof(proof_path).await?;
+    // Ok(ProverResult {
+    //     proof: proof.proof,
+    //     serialized_proof: proof.serialized_proof,
+    //     program_hash: proof.program_hash,
+    //     program_output: proof.program_output,
+    //     program_output_hash: proof.program_output_hash,
+    // })
 }

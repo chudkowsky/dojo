@@ -39,6 +39,7 @@ members = [
 	"crates/metrics",
 	"crates/saya/core",
 	"crates/saya/provider",
+	"crates/saya/snos-wrapper",
 	"crates/sozo/signers",
 	"crates/sozo/walnut",
 	"crates/torii/client",
@@ -210,10 +211,11 @@ url = { version = "2.4.0", features = [ "serde" ] }
 walkdir = "2.5.0"
 
 # snos
-pathfinder-common = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
-pathfinder-crypto = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
-pathfinder-merkle-tree = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
-pathfinder-storage = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
+# pathfinder-common = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
+# pathfinder-crypto = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
+# pathfinder-merkle-tree = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
+# pathfinder-storage = { git = "https://github.com/Moonsong-Labs/pathfinder", rev = "9c19d9a37be8f447ec4548456c440ccbd0e44260" }
+# papyrus_storage = { git = "https://github.com/matzayonc/sequencer.git", rev = "15fe7cf0169e4e00f2d5667aeaf44e3a9d7559d8" }
 prove_block = { git = "https://github.com/matzayonc/snos.git", rev = "463603849b6dfdabae2ef55a887e83ff2a3c3efd" }
 rpc-client = { git = "https://github.com/matzayonc/snos.git", rev = "463603849b6dfdabae2ef55a887e83ff2a3c3efd" }
 rpc-replay = { git = "https://github.com/matzayonc/snos.git", rev = "463603849b6dfdabae2ef55a887e83ff2a3c3efd" }
@@ -255,7 +257,7 @@ alloy-transport = { version = "0.3", default-features = false }
 
 starknet = "0.12.0"
 starknet-crypto = "0.7.1"
-starknet-types-core = "0.1.6"
+starknet-types-core = "0.1.7"
 
 [patch.'https://github.com/Moonsong-Labs/cairo-vm']
 cairo-vm = { git = "https://github.com/matzayonc/cairo-vm.git", rev = "59ceafbe7a10e03d41415994984e2578207172d3" }

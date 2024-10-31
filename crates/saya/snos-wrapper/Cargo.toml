@@ -1,8 +1,8 @@
 [package]
-description = "Saya core implementation."
 edition.workspace = true
 license-file.workspace = true
-name = "saya-core"
+license.workspace = true
+name = "snos-wrapper"
 repository.workspace = true
 version.workspace = true
 
@@ -31,7 +31,7 @@ serde.workspace = true
 serde_json.workspace = true
 starknet-crypto.workspace = true
 starknet-os-types.workspace = true
-starknet-os.workspace = true
+# starknet-os.workspace = true
 starknet.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
@@ -54,6 +54,8 @@ reqwest.workspace = true
 starknet-providers = "0.11.0"
 starknet_api = { git = "https://github.com/Moonsong-Labs/sequencer", rev = "6624e910c57db9a16f1607c1ed26f7d8f1114e73", features = [ "testing" ] }
 tempdir = "0.3.7"
+
+papyrus_storage = { git = "https://github.com/matzayonc/sequencer.git", rev = "889de94b8763d9811308ecb6da2bbf734385e8ea" }
 
 [patch.'https://github.com/Moonsong-Labs/cairo-vm']
 cairo-vm = { git = "https://github.com/matzayonc/cairo-vm.git", rev = "59ceafbe7a10e03d41415994984e2578207172d3" }

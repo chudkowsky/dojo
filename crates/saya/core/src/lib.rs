@@ -49,6 +49,7 @@ pub mod macros;
 pub mod prover;
 pub mod snos;
 pub mod snos_input;
+mod storage;
 pub mod verifier;
 
 pub(crate) const LOG_TARGET: &str = "saya::core";
