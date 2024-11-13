@@ -13,17 +13,10 @@ use args::SayaArgs;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = SayaArgs::parse();
     args.init_logging()?;
-
-    let config = args.try_into()?;
-    print_intro(&config);
-
-    let mut saya = Saya::new(config).await?;
-    saya.start().await?;
-
-    // Wait until Ctrl + C is pressed, then shutdown
-    // ctrl_c().await?;
-    // handle.stop()?;
-
+    let saya_config = args.try_into()?;
+    print_intro(&saya_config);
+    let mut saya = Saya::new(saya_config).await;
+    saya.start().await;
     Ok(())
 }
 
@@ -51,17 +44,6 @@ CONFIGURATION
 =============
     ",
     );
-
-    if let Some(da_config) = &config.data_availability {
-        println!(
-            r"
-DATA AVAILABILITY
-==================
-{da_config}
-    ",
-        );
-    }
-
     println!(
         r"
 PROVER
