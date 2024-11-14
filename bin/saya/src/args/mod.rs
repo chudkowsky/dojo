@@ -1,7 +1,8 @@
 //! Saya binary options.
 use clap::Parser;
 use dojo_utils::keystore::prompt_password_if_needed;
-use saya_core::{starknet::account::StarknetAccountData, SayaConfig};
+use saya_core::starknet::account::StarknetAccountData;
+use saya_core::SayaConfig;
 use settlement::SettlementOptions;
 use starknet::core::utils::cairo_short_string_to_felt;
 use starknet::signers::SigningKey;
@@ -82,7 +83,6 @@ impl TryFrom<SayaArgs> for SayaConfig {
     type Error = Box<dyn std::error::Error>;
 
     fn try_from(args: SayaArgs) -> Result<Self, Self::Error> {
-
         // Check if the private key is from keystore or provided directly to follow `sozo`
         // conventions.
         let private_key = if let Some(pk) = args.starknet_account.signer_key {
@@ -121,7 +121,7 @@ impl TryFrom<SayaArgs> for SayaConfig {
         Ok(SayaConfig {
             rpc_url: args.rpc_url,
             prover_url: args.proof.prover_url,
-            prover_key:args.proof.private_key,
+            prover_key: args.proof.private_key,
             settlement_contract,
             starknet_account,
         })

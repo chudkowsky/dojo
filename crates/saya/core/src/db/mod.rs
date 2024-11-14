@@ -1,56 +1,78 @@
-pub mod sql_lite;
-use sqlx::Error;
+use crate::errors::Error;
 
+pub mod sql_lite;
+pub mod tests;
+pub mod utils;
 #[allow(async_fn_in_trait)]
 pub trait SayaProvingDb {
+
     async fn insert_block(
         &self,
         block_id: u32,
         query_id: &str,
-        status: AtlanticStatus,
+        status: ProverStatus,
     ) -> Result<(), Error>;
-    async fn check_status(&self, block: u32) -> Result<Block, sqlx::Error>;
+    
+    async fn check_status(&self, block: u32) -> Result<Block, Error>;
+
     async fn update_block_status(
         &self,
         block_id: u32,
-        status: AtlanticStatus,
-    ) -> Result<(), sqlx::Error>;
+        status: ProverStatus,
+    ) -> Result<(), Error>;
+    async fn list_blocks_with_status(
+        &self,
+        status: ProverStatus,
+    ) -> Result<Vec<Block>, Error>;
+
     async fn update_query_id_step2(&self, block_id: u32, query_id: &str)
-    -> Result<(), sqlx::Error>;
-    async fn list_pending_blocks(&self) -> Result<Vec<Block>, sqlx::Error>;
+    -> Result<(), Error>;
+
+    async fn insert_pie_proof(&self, block_id: u32, proof: &str) -> Result<(), Error>;
+    async fn insert_bridge_proof(&self, block_id: u32, proof: &str) -> Result<(), Error>;
+    async fn get_pie_proof(&self, block_id: u32) -> Result<String, Error>;
+    async fn get_bridge_proof(&self, block_id: u32) -> Result<String, Error>;
+    async fn list_proof(&self) -> Result<Vec<String>, Error>;
+
 }
 #[derive(Debug, Clone)]
 pub struct Block {
     pub id: u32,
     pub query_id_step1: String,
     pub query_id_step2: String,
-    pub status: AtlanticStatus,
+    pub status: ProverStatus,
 }
 #[derive(Debug, Clone, PartialEq)]
-pub enum AtlanticStatus {
-    InProgress,
+pub enum ProverStatus {
+    PieSubmitted, 
     Failed,
-    Step1Completed,
-    Completed,
+    PieProofGenerated, 
+    BridgeProofSubmited,
+    Completed, 
 }
-impl AtlanticStatus {
+
+
+impl ProverStatus {
     pub fn as_str(&self) -> &str {
         match self {
-            AtlanticStatus::InProgress => "IN_PROGRESS",
-            AtlanticStatus::Failed => "FAILED",
-            AtlanticStatus::Step1Completed => "STEP1_COMPLETE",
-            AtlanticStatus::Completed => "COMPLETED",
+            ProverStatus::PieSubmitted => "PIE_SUBMITTED",
+            ProverStatus::Failed => "FAILED",
+            ProverStatus::PieProofGenerated => "PIE_PROOF_GENERATED",
+            ProverStatus::BridgeProofSubmited => "BRIDGE_PROOF_SUBMITED",
+            ProverStatus::Completed => "COMPLETED",
         }
     }
 }
-impl From<&str> for AtlanticStatus {
-    fn from(s: &str) -> Self {
+impl TryFrom<&str> for ProverStatus {
+    type Error = Error;
+    fn try_from(s: &str) -> Result<Self,Self::Error> {
         match s {
-            "IN_PROGRESS" => AtlanticStatus::InProgress,
-            "FAILED" => AtlanticStatus::Failed,
-            "STEP1_COMPLETE" => AtlanticStatus::Step1Completed,
-            "COMPLETED" => AtlanticStatus::Completed,
-            _ => panic!("Invalid status"),
+            "PIE_SUBMITTED" => Ok(ProverStatus::PieSubmitted),
+            "FAILED" => Ok(ProverStatus::Failed),
+            "PIE_PROOF_GENERATED" => Ok(ProverStatus::PieProofGenerated),
+            "BRIDGE_PROOF_SUBMITED" => Ok(ProverStatus::BridgeProofSubmited),
+            "COMPLETED" => Ok(ProverStatus::Completed),
+            _ => Err(Error::TryFromStrError("AtlanticStatus conversion error".to_string())),
         }
     }
 }

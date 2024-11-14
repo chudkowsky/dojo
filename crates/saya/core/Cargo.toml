@@ -34,7 +34,6 @@ herodotus_sharp_playground = { git = "https://github.com/chudkowsky/herodotus_sh
 prover-sdk = { git = "https://github.com/cartridge-gg/http-prover", rev = "24256d5" }
 reqwest.workspace = true
 serde-felt = { git = "https://github.com/cartridge-gg/cairo-proof-parser.git", rev = "f175d58" }
-tempdir = "0.3.7"
 prove_block = {git = "https://github.com/chudkowsky/snos.git",rev= "15a903f"}
 # starknet-os = { path = "/home/mateuszchudkowski/dev/snos/crates/starknet-os" }
 starknet-os = {git = "https://github.com/chudkowsky/snos.git",rev= "15a903f"}

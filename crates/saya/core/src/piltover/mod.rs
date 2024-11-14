@@ -1,10 +1,15 @@
 use serde::Serialize;
-use starknet::accounts::ConnectedAccount;
-use starknet::core::types::{BlockId, BlockTag, FunctionCall};
+use serde_felt::to_felts;
+use starknet::accounts::{Account, ConnectedAccount};
+use starknet::core::types::{BlockId, BlockTag, Call, FunctionCall};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
+use starknet_crypto::poseidon_hash_many;
 use starknet_types_core::felt::Felt;
+use swiftness_proof_parser::{parse, StarkProof};
+use tracing::info;
 
+use crate::retry;
 use crate::starknet::account::SayaStarknetAccount;
 
 #[derive(Debug, Serialize)]
@@ -26,7 +31,37 @@ pub struct PiltoverState {
 }
 
 impl Piltover {
-    pub async fn update_state(&self, _calldata: PiltoverCalldata) -> () {}
+    pub async fn update_state(&self, pie_proof: String, bridge_proof: String) -> () {
+        let parsed_proof = parse(pie_proof).unwrap();
+        let program_snos_output = calculate_output(parsed_proof);
+        let parsed_proof = parse(bridge_proof).unwrap();
+        let program_output = calculate_output(parsed_proof);
+        let output_hash = poseidon_hash_many(&program_output);
+        let snos_output_hash = poseidon_hash_many(&program_snos_output);
+        println!("{:?}", output_hash);
+        println!("{:?}", snos_output_hash);
+
+        let piltover_calldata = PiltoverCalldata {
+            program_snos_output,
+            program_output,
+            onchain_data_hash: Felt::ZERO,
+            onchain_data_size: (Felt::ZERO, Felt::ZERO),
+        };
+        let nonce = self.account.get_nonce().await.unwrap();
+        let calldata = to_felts(&piltover_calldata).unwrap();
+        let _tx = retry!(
+            self.account
+                .execute_v1(vec![Call {
+                    to: self.contract,
+                    selector: get_selector_from_name("update_state").expect("invalid selector"),
+                    calldata: calldata.clone()
+                }])
+                .nonce(nonce)
+                .send()
+        )
+        .unwrap(); //test this better 
+        info!("`update_state` piltover transaction sent to contract {:#x}", self.contract);
+    }
 
     pub async fn get_state(&self) -> PiltoverState {
         let function_call = FunctionCall {
@@ -53,43 +88,18 @@ impl Piltover {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    pub const SEPOLIA: Felt = Felt::from_raw([
-        507980251676163170,
-        18446744073709551615,
-        18446744073708869172,
-        1555806712078248243,
-    ]);
-
-    use url::Url;
-
-    use super::*;
-    use crate::starknet::account::StarknetAccountData;
-
-    #[tokio::test]
-    async fn test_piltover() {
-        let starknet_url = Url::parse("https://api.cartridge.gg/x/starknet/sepolia").unwrap();
-        let signer_address =
-            Felt::from_hex("0x069A4f598B14F8424F2Ee90B7A55fbc6083635dA13f96a35acae04e6C149798D")
-                .unwrap();
-        let signer_key =
-            Felt::from_hex("0x036e29b89cc49d3ade4c0535b88d7131f39c58aef0c75e76d76e6ccf075b105f")
-                .unwrap();
-
-        let starknet_account =
-            StarknetAccountData { starknet_url, chain_id: SEPOLIA, signer_address, signer_key };
-        let account = starknet_account.get_starknet_account();
-        let piltover = Piltover {
-            contract: Felt::from_hex(
-                "0x443a70746f8f0d0e3b34343e80c079d31b977729773593485da69d88e1bdbd0",
-            )
-            .unwrap(),
-            account,
-        };
-        let state = piltover.get_state().await;
-        println!("{:?}", state.block_hash);
-        println!("{:?}", state.block_number);
-        println!("{:?}", state.state_root);
+pub fn calculate_output(proof: StarkProof) -> Vec<Felt> {
+    let output_segment = proof.public_input.segments[2].clone();
+    let output_len = output_segment.stop_ptr - output_segment.begin_addr;
+    let start = proof.public_input.main_page.len() - output_len as usize;
+    let end = proof.public_input.main_page.len();
+    let program_output = proof.public_input.main_page[start..end]
+        .iter()
+        .map(|cell| cell.value.clone())
+        .collect::<Vec<_>>();
+    let mut felts = vec![];
+    for elem in &program_output {
+        felts.push(Felt::from_dec_str(&elem.to_string()).unwrap());
     }
+    felts
 }

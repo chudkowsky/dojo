@@ -15,8 +15,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     args.init_logging()?;
     let saya_config = args.try_into()?;
     print_intro(&saya_config);
-    let mut saya = Saya::new(saya_config).await;
-    saya.start().await;
+    let mut saya = Saya::new(saya_config).await?;
+    saya.start().await?;
     Ok(())
 }
 
