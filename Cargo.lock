@@ -12530,14 +12530,11 @@ dependencies = [
 name = "saya"
 version = "1.0.0-rc.0"
 dependencies = [
- "anyhow",
  "clap",
  "console",
  "dojo-utils",
  "saya-core",
  "starknet 0.12.0",
- "starknet-crypto 0.7.2",
- "starknet-types-core",
  "tokio",
  "tracing",
  "tracing-log 0.1.4",

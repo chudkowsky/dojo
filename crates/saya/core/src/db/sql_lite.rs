@@ -88,6 +88,13 @@ impl SqliteDb {
         }
         Ok(result)
     }
+    pub async fn delete_proof(&self, block_id: u32) -> Result<(), Error> {
+        query("DELETE FROM proofs WHERE block_number = ?1")
+            .bind(block_id)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
 }
 
 impl SayaProvingDb for SqliteDb {
@@ -203,10 +210,10 @@ impl SayaProvingDb for SqliteDb {
         Ok(row.get("bridge_proof"))
     }
     async fn list_proof(&self) -> Result<Vec<String>, Error> {
-        let rows = query("SELECT pie_proof FROM proofs").fetch_all(&self.pool).await?;
+        let rows = query("SELECT bridge_proof FROM proofs").fetch_all(&self.pool).await?;
         let mut result = Vec::new();
         for row in rows {
-            result.push(row.get("pie_proof"));
+            result.push(row.get("bridge_proof"));
         }
         Ok(result)
     }

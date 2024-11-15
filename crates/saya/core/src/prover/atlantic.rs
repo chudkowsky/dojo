@@ -1,4 +1,4 @@
-use herodotus_sharp_playground::models::{JobResponse, ProverVersion, SharpSdk};
+use herodotus_sharp_playground::models::{ProverVersion, SharpSdk};
 use tracing::trace;
 use url::Url;
 
@@ -53,38 +53,28 @@ impl AtlanticProver {
     }
 
     pub async fn fetch_proof(&self, query_id: &str) -> Result<String, Error> {
-        let base_url = "https://atlantic.api.herodotus.cloud/sharp_queries";
-        let proof_path = format!("query_{}/proof.json", query_id);
+        let proof_path = format!("https://atlantic-queries.s3.nl-ams.scw.cloud/sharp_queries/query_{}/proof.json", query_id);
         let client = reqwest::Client::new();
-        let url = format!("{}/{}", base_url, proof_path);
-        let response = client.get(&url).send().await?;
+        let response = client.get(&proof_path).send().await?;
         let response_text = response.text().await?;
         Ok(response_text)
     }
 
-    pub async fn check_proof_generation_status(
-        &self,
-        query_id: &str,
-    ) -> Result<JobResponse, Error> {
+    pub async fn check_query_status(&self, id: u32, query_id: &str) -> Result<bool, Error> {
+        trace!("Checking status for block {}, query_id {}", id, query_id);
+
         let base_url = "https://atlantic.api.herodotus.cloud";
         let sdk = SharpSdk::new(self.api_key.clone(), base_url)?;
+        
         let is_alive = sdk.get_is_alive().await?;
         if !is_alive {
             return Err(Error::ServerNotAliveError);
         }
+        
         trace!("Checking status for query_id {}", query_id);
-        let status = sdk.get_sharp_query_jobs(&query_id).await?;
+        
+        let job_response = sdk.get_sharp_query_jobs(&query_id).await?;
+        let status = !job_response.jobs.is_empty() && job_response.jobs.iter().map(|job| job.status == "COMPLETED").all(|x| x);
         Ok(status)
-    }
-    pub async fn check_query_status(&self, id: u32, query_id: &str) -> Result<bool, Error> {
-        trace!("Checking status for block {}, query_id {}", id, query_id);
-        let job_response = self.check_proof_generation_status(query_id).await?;
-        if job_response.jobs.is_empty() {
-            trace!("No jobs for block {}, query_id {}", id, query_id);
-            return Ok(false);
-        }
-        let all_completed =
-            job_response.jobs.iter().map(|job| job.status == "COMPLETED").all(|x| x);
-        Ok(all_completed)
     }
 }

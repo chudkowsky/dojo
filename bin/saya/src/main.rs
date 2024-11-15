@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn print_intro(config: &SayaConfig) {
+fn print_intro(_config: &SayaConfig) {
     println!(
         "{}",
         Style::new().color256(94).apply_to(
