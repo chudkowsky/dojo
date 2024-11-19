@@ -9,9 +9,9 @@ use serde::{Deserialize, Serialize};
 use starknet::core::types::Felt;
 use url::Url;
 
+use super::PublishedStateDiff;
 use crate::data_availability::error::{DataAvailabilityResult, Error};
 use crate::data_availability::{DataAvailabilityClient, DataAvailabilityMode};
-use crate::prover::persistent::PublishedStateDiff;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CelestiaConfig {

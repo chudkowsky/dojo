@@ -15,8 +15,6 @@ pub mod celestia;
 pub mod error;
 use error::DataAvailabilityResult;
 
-use crate::prover::persistent::PublishedStateDiff;
-
 /// All possible chains configuration for data availability.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum DataAvailabilityConfig {
@@ -105,4 +103,13 @@ pub async fn client_from_config(
             Ok(Box::new(celestia::CelestiaClient::new(c).await?))
         }
     }
+}
+pub type BlockHeight = u64;
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PublishedStateDiff {
+    pub prev_state_root: Felt,
+    pub state_root: Felt,
+    pub prev_height: Option<BlockHeight>,
+    pub prev_commitment: Option<Commitment>,
+    pub proof: serde_json::Value,
 }
