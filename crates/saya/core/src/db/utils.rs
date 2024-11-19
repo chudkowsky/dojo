@@ -52,11 +52,13 @@ impl SqliteDb {
     }
     // let table_exists =
     pub(crate) async fn check_table_exists(pool: &Pool<Sqlite>) -> Result<bool, Error> {
-        let blocks_exist = sqlx::query("SELECT name FROM sqlite_master WHERE type='table' AND name='blocks';")
-            .fetch_optional(pool)
-            .await?
-            .is_some();
-        let proofs_exist = sqlx::query("SELECT name FROM sqlite_master WHERE type='table' AND name='proofs';")
+        let blocks_exist =
+            sqlx::query("SELECT name FROM sqlite_master WHERE type='table' AND name='blocks';")
+                .fetch_optional(pool)
+                .await?
+                .is_some();
+        let proofs_exist =
+            sqlx::query("SELECT name FROM sqlite_master WHERE type='table' AND name='proofs';")
                 .fetch_optional(pool)
                 .await?
                 .is_some();

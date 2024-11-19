@@ -15,7 +15,6 @@ pub mod celestia;
 pub mod error;
 use error::DataAvailabilityResult;
 
-
 /// All possible chains configuration for data availability.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum DataAvailabilityConfig {

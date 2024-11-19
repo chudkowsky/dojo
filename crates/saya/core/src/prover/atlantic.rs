@@ -1,8 +1,10 @@
 use herodotus_sharp_playground::models::{ProverVersion, SharpSdk};
+use swiftness_proof_parser::{parse, StarkProof};
 use tracing::trace;
 use url::Url;
 
-use crate::{db::sql_lite::SqliteDb, errors::Error};
+use crate::db::sql_lite::SqliteDb;
+use crate::errors::Error;
 
 const LAYOUT_BRIDGE: &[u8; 31478586] =
     include_bytes!("../../../../../bin/saya/programs/layout_bridge.json");
@@ -14,8 +16,8 @@ pub struct AtlanticProver {
 pub type QueryId = String;
 
 impl AtlanticProver {
-    pub fn new(api_key: String, url: Url,db: SqliteDb) -> Self {
-        AtlanticProver { api_key, url, db}
+    pub fn new(api_key: String, url: Url, db: SqliteDb) -> Self {
+        AtlanticProver { api_key, url, db }
     }
     pub async fn submit_proof_generation(&self, pie: Vec<u8>) -> Result<QueryId, Error> {
         let base_url = "https://atlantic.api.herodotus.cloud";
@@ -53,10 +55,14 @@ impl AtlanticProver {
     }
 
     pub async fn fetch_proof(&self, query_id: &str) -> Result<String, Error> {
-        let proof_path = format!("https://atlantic-queries.s3.nl-ams.scw.cloud/sharp_queries/query_{}/proof.json", query_id);
+        let proof_path = format!(
+            "https://atlantic-queries.s3.nl-ams.scw.cloud/sharp_queries/query_{}/proof.json",
+            query_id
+        );
         let client = reqwest::Client::new();
         let response = client.get(&proof_path).send().await?;
         let response_text = response.text().await?;
+        let _: StarkProof = parse(response_text.clone())?; //We just verify to see if its valid proof format
         Ok(response_text)
     }
 
@@ -65,16 +71,17 @@ impl AtlanticProver {
 
         let base_url = "https://atlantic.api.herodotus.cloud";
         let sdk = SharpSdk::new(self.api_key.clone(), base_url)?;
-        
+
         let is_alive = sdk.get_is_alive().await?;
         if !is_alive {
             return Err(Error::ServerNotAliveError);
         }
-        
+
         trace!("Checking status for query_id {}", query_id);
-        
-        let job_response = sdk.get_sharp_query_jobs(&query_id).await?;
-        let status = !job_response.jobs.is_empty() && job_response.jobs.iter().map(|job| job.status == "COMPLETED").all(|x| x);
+
+        let job_response = sdk.get_sharp_query_jobs(query_id).await?;
+        let status = !job_response.jobs.is_empty()
+            && job_response.jobs.iter().map(|job| job.status == "COMPLETED").all(|x| x);
         Ok(status)
     }
 }

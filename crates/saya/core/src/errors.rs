@@ -36,4 +36,6 @@ pub enum Error {
     SharpError(#[from] herodotus_sharp_playground::error::SharpSdkError),
     #[error(transparent)]
     RequestError(#[from] reqwest::Error),
+    #[error(transparent)]
+    StarknetProviderError(#[from] starknet::providers::ProviderError),
 }

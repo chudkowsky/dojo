@@ -9,6 +9,7 @@ use starknet_types_core::felt::Felt;
 use swiftness_proof_parser::{parse, StarkProof};
 use tracing::info;
 
+use crate::errors::Error;
 use crate::retry;
 use crate::starknet::account::SayaStarknetAccount;
 
@@ -31,10 +32,10 @@ pub struct PiltoverState {
 }
 
 impl Piltover {
-    pub async fn update_state(&self, pie_proof: String, bridge_proof: String) -> () {
-        let parsed_proof = parse(pie_proof).unwrap();
+    pub async fn update_state(&self, pie_proof: String, bridge_proof: String) -> Result<(), Error> {
+        let parsed_proof = parse(pie_proof)?;
         let program_snos_output = calculate_output(parsed_proof);
-        let parsed_proof = parse(bridge_proof).unwrap();
+        let parsed_proof = parse(bridge_proof)?;
         let program_output = calculate_output(parsed_proof);
         let output_hash = poseidon_hash_many(&program_output);
         let snos_output_hash = poseidon_hash_many(&program_snos_output);
@@ -47,8 +48,8 @@ impl Piltover {
             onchain_data_hash: Felt::ZERO,
             onchain_data_size: (Felt::ZERO, Felt::ZERO),
         };
-        let nonce = self.account.get_nonce().await.unwrap();
-        let calldata = to_felts(&piltover_calldata).unwrap();
+        let nonce = self.account.get_nonce().await?;
+        let calldata = to_felts(&piltover_calldata)?;
         let _tx = retry!(
             self.account
                 .execute_v1(vec![Call {
@@ -61,6 +62,7 @@ impl Piltover {
         )
         .unwrap(); //test this better 
         info!("`update_state` piltover transaction sent to contract {:#x}", self.contract);
+        Ok(())
     }
 
     pub async fn get_state(&self) -> PiltoverState {
@@ -73,18 +75,17 @@ impl Piltover {
         let transaction = self
             .account
             .provider()
-            .call(function_call, &BlockId::Tag(BlockTag::Latest))
+            .call(function_call, BlockId::Tag(BlockTag::Latest))
             .await
             .unwrap();
         let state = transaction[0];
         let block_number = transaction[1];
         let block_hash = transaction[2];
-        let piltover_state = PiltoverState {
+        PiltoverState {
             state_root: state,
             block_number: block_number.to_string().parse().unwrap(),
             block_hash,
-        };
-        return piltover_state;
+        }
     }
 }
 

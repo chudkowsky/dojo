@@ -5,35 +5,29 @@ pub mod tests;
 pub mod utils;
 #[allow(async_fn_in_trait)]
 pub trait SayaProvingDb {
-
     async fn insert_block(
         &self,
         block_id: u32,
         query_id: &str,
         status: ProverStatus,
     ) -> Result<(), Error>;
-    
+
     async fn check_status(&self, block: u32) -> Result<Block, Error>;
 
-    async fn update_block_status(
+    async fn update_block_status(&self, block_id: u32, status: ProverStatus) -> Result<(), Error>;
+    async fn list_blocks_with_status(&self, status: ProverStatus) -> Result<Vec<Block>, Error>;
+
+    async fn update_block_query_id_for_bridge_proof(
         &self,
         block_id: u32,
-        status: ProverStatus,
+        query_id: &str,
     ) -> Result<(), Error>;
-    async fn list_blocks_with_status(
-        &self,
-        status: ProverStatus,
-    ) -> Result<Vec<Block>, Error>;
-
-    async fn update_query_id_step2(&self, block_id: u32, query_id: &str)
-    -> Result<(), Error>;
 
     async fn insert_pie_proof(&self, block_id: u32, proof: &str) -> Result<(), Error>;
     async fn insert_bridge_proof(&self, block_id: u32, proof: &str) -> Result<(), Error>;
     async fn get_pie_proof(&self, block_id: u32) -> Result<String, Error>;
     async fn get_bridge_proof(&self, block_id: u32) -> Result<String, Error>;
     async fn list_proof(&self) -> Result<Vec<String>, Error>;
-
 }
 #[derive(Debug, Clone)]
 pub struct Block {
@@ -44,13 +38,12 @@ pub struct Block {
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProverStatus {
-    PieSubmitted, 
+    PieSubmitted,
     Failed,
-    PieProofGenerated, 
+    PieProofGenerated,
     BridgeProofSubmited,
-    Completed, 
+    Completed,
 }
-
 
 impl ProverStatus {
     pub fn as_str(&self) -> &str {
@@ -65,7 +58,7 @@ impl ProverStatus {
 }
 impl TryFrom<&str> for ProverStatus {
     type Error = Error;
-    fn try_from(s: &str) -> Result<Self,Self::Error> {
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
         match s {
             "PIE_SUBMITTED" => Ok(ProverStatus::PieSubmitted),
             "FAILED" => Ok(ProverStatus::Failed),

@@ -2,8 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use sqlx::sqlite::SqlitePoolOptions;
-use sqlx::query;
-use sqlx::{Pool, Row, Sqlite};
+use sqlx::{query, Pool, Row, Sqlite};
 use tracing::trace;
 
 use super::Block;
@@ -24,11 +23,11 @@ impl SqliteDb {
         } else {
             trace!("Database file found at: {}", path);
         }
-        
+
         let pool = SqlitePoolOptions::new().connect(&format!("sqlite:{}", path)).await?;
 
         let table_exists = Self::check_table_exists(&pool).await?;
-        
+
         if !table_exists || !Self::check_columns(&pool).await? {
             trace!("Creating or updating the 'blocks' table...");
             Self::create_block_table(&pool).await?;
@@ -46,8 +45,8 @@ impl SqliteDb {
                 id INTEGER PRIMARY KEY,
                 query_id_step1 TEXT NOT NULL, 
                 query_id_step2 TEXT,          
-                status TEXT NOT NULL CHECK (status IN ('PIE_SUBMITTED', 'FAILED', 'PIE_PROOF_GENERATED', \
-             'COMPLETED', 'BRIDGE_PROOF_SUBMITED'))
+                status TEXT NOT NULL CHECK (status IN ('PIE_SUBMITTED', 'FAILED', \
+             'PIE_PROOF_GENERATED', 'COMPLETED', 'BRIDGE_PROOF_SUBMITED'))
         );",
         )
         .execute(pool)
@@ -79,12 +78,7 @@ impl SqliteDb {
             let query_id_step2 = row.get("query_id_step2");
             let status: &str = row.get("status");
             let status = ProverStatus::try_from(status)?;
-            result.push(Block {
-                id,
-                query_id_step1,
-                query_id_step2,
-                status,
-            });
+            result.push(Block { id, query_id_step1, query_id_step2, status });
         }
         Ok(result)
     }
@@ -95,17 +89,19 @@ impl SqliteDb {
             .await?;
         Ok(())
     }
+    pub async fn delete_block(&self, block_id: u32) -> Result<(), Error> {
+        query("DELETE FROM blocks WHERE id = ?1").bind(block_id).execute(&self.pool).await?;
+        Ok(())
+    }
 }
 
 impl SayaProvingDb for SqliteDb {
-
     async fn check_status(&self, block: u32) -> Result<Block, Error> {
-        let rows = query(
-            "SELECT id, query_id_step1, query_id_step2, status FROM blocks WHERE id = ?1",
-        )
-        .bind(block)
-        .fetch_all(&self.pool)
-        .await?;
+        let rows =
+            query("SELECT id, query_id_step1, query_id_step2, status FROM blocks WHERE id = ?1")
+                .bind(block)
+                .fetch_all(&self.pool)
+                .await?;
         let result = &rows[0];
         let id = result.get("id");
         let query_id_step1 = result.get("query_id_step1");
@@ -128,11 +124,7 @@ impl SayaProvingDb for SqliteDb {
             .await?;
         Ok(())
     }
-    async fn update_block_status(
-        &self,
-        block_id: u32,
-        status: ProverStatus,
-    ) -> Result<(), Error> {
+    async fn update_block_status(&self, block_id: u32, status: ProverStatus) -> Result<(), Error> {
         query("UPDATE blocks SET status = ?1 WHERE id = ?2")
             .bind(status.as_str())
             .bind(block_id)
@@ -141,22 +133,28 @@ impl SayaProvingDb for SqliteDb {
         Ok(())
     }
 
-    async fn update_query_id_step2(
+    async fn update_block_query_id_for_bridge_proof(
         &self,
         block_id: u32,
         query_id: &str,
     ) -> Result<(), Error> {
+        let mut transaction = self.pool.begin().await?;
         query("UPDATE blocks SET query_id_step2 = ?1 WHERE id = ?2")
             .bind(query_id)
             .bind(block_id)
-            .execute(&self.pool)
+            .execute(&mut *transaction)
             .await?;
+
+        query("UPDATE blocks SET status = ?1 WHERE id = ?2")
+            .bind(ProverStatus::BridgeProofSubmited.as_str())
+            .bind(block_id)
+            .execute(&mut *transaction)
+            .await?;
+
+        transaction.commit().await?;
         Ok(())
     }
-    async fn list_blocks_with_status(
-        &self,
-        status: ProverStatus,
-    ) -> Result<Vec<Block>, Error> {
+    async fn list_blocks_with_status(&self, status: ProverStatus) -> Result<Vec<Block>, Error> {
         let rows = query(
             "SELECT id, query_id_step1, query_id_step2, status FROM blocks WHERE status = ?1",
         )
@@ -170,29 +168,44 @@ impl SayaProvingDb for SqliteDb {
             let query_id_step2 = row.get("query_id_step2");
             let status: &str = row.get("status");
             let status = ProverStatus::try_from(status)?;
-            result.push(Block {
-                id,
-                query_id_step1,
-                query_id_step2,
-                status,
-            });
+            result.push(Block { id, query_id_step1, query_id_step2, status });
         }
         Ok(result)
     }
     async fn insert_pie_proof(&self, block_id: u32, proof: &str) -> Result<(), Error> {
+        let mut transaction = self.pool.begin().await?;
         query("INSERT INTO proofs (block_number, pie_proof) VALUES (?1, ?2)")
             .bind(block_id)
             .bind(proof)
-            .execute(&self.pool)
+            .execute(&mut *transaction)
             .await?;
+        query("UPDATE blocks SET status = ?1 WHERE id = ?2")
+        .bind(ProverStatus::PieProofGenerated.as_str())
+        .bind(block_id)
+        .execute(&mut *transaction) // Use `&mut transaction` explicitly
+        .await?;
+        transaction.commit().await?;
         Ok(())
     }
+
+    /// Insert the bridge proof into the database and update the status of the block to `COMPLETED`
     async fn insert_bridge_proof(&self, block_id: u32, proof: &str) -> Result<(), Error> {
+        let mut transaction = self.pool.begin().await?;
+        // Update the proof in the proofs table
         query("UPDATE proofs SET bridge_proof = ?2 WHERE block_number = ?1")
-            .bind(block_id)
-            .bind(proof)
-            .execute(&self.pool)
-            .await?;
+        .bind(block_id)
+        .bind(proof)
+        .execute(&mut *transaction) // Use `&mut transaction` explicitly
+        .await?;
+
+        // Update the status in the blocks table
+        query("UPDATE blocks SET status = ?1 WHERE id = ?2")
+        .bind(ProverStatus::Completed.as_str())
+        .bind(block_id)
+        .execute(&mut *transaction) // Use `&mut transaction` explicitly
+        .await?;
+        // Commit the transaction
+        transaction.commit().await?;
         Ok(())
     }
     async fn get_pie_proof(&self, block_id: u32) -> Result<String, Error> {

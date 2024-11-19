@@ -61,7 +61,8 @@ pub struct SayaArgs {
 
 impl SayaArgs {
     pub fn init_logging(&self) -> Result<(), Box<dyn std::error::Error>> {
-        const DEFAULT_LOG_FILTER: &str = "info,saya::core=trace,blockchain=off,provider=off";
+        const DEFAULT_LOG_FILTER: &str =
+            "info,saya::core=trace,blockchain=off,provider=off,herodotus_sharp_playground=off";
 
         LogTracer::init()?;
 

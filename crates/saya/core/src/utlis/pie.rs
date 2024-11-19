@@ -11,5 +11,5 @@ impl CairoPieBytes for CairoPie {
         let pie_dir = temp_dir().join("pie");
         self.write_zip_file(&pie_dir).unwrap();
         std::fs::read(pie_dir).unwrap()
-    } 
+    }
 }

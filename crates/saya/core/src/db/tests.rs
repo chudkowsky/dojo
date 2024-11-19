@@ -1,14 +1,16 @@
 #[cfg(test)]
 mod tests {
-    use crate::db::{sql_lite::SqliteDb, ProverStatus, SayaProvingDb};
     use sqlx::sqlite::SqlitePoolOptions;
+
+    use crate::db::sql_lite::SqliteDb;
+    use crate::db::{ProverStatus, SayaProvingDb};
 
     async fn setup_db() -> SqliteDb {
         let pool = SqlitePoolOptions::new()
             .connect("sqlite::memory:")
             .await
             .expect("Failed to create database pool in memory");
-        
+
         let db = SqliteDb { pool };
         SqliteDb::create_block_table(&db.pool).await.expect("Failed to create blocks table");
         SqliteDb::create_proof_table(&db.pool).await.expect("Failed to create proofs table");
@@ -51,7 +53,7 @@ mod tests {
             .await
             .expect("Failed to insert block");
 
-        db.update_query_id_step2(3, "query_3_step2")
+        db.update_block_query_id_for_bridge_proof(3, "query_3_step2")
             .await
             .expect("Failed to update query_id_step2");
 
@@ -85,9 +87,7 @@ mod tests {
             .await
             .expect("Failed to insert block");
 
-        db.insert_pie_proof(6, "pie_proof_data")
-            .await
-            .expect("Failed to insert pie proof");
+        db.insert_pie_proof(6, "pie_proof_data").await.expect("Failed to insert pie proof");
 
         let pie_proof = db.get_pie_proof(6).await.expect("Failed to get pie proof");
         assert_eq!(pie_proof, "pie_proof_data");
@@ -99,9 +99,7 @@ mod tests {
         db.insert_block(7, "query_7", ProverStatus::PieProofGenerated)
             .await
             .expect("Failed to insert block");
-        db.insert_pie_proof(7, "pie_proof_data")
-            .await
-            .expect("Failed to insert pie proof");
+        db.insert_pie_proof(7, "pie_proof_data").await.expect("Failed to insert pie proof");
 
         db.insert_bridge_proof(7, "bridge_proof_data")
             .await
@@ -117,9 +115,7 @@ mod tests {
         db.insert_block(8, "query_8", ProverStatus::PieSubmitted)
             .await
             .expect("Failed to insert block");
-        db.insert_pie_proof(8, "pie_proof_data")
-            .await
-            .expect("Failed to insert pie proof");
+        db.insert_pie_proof(8, "pie_proof_data").await.expect("Failed to insert pie proof");
 
         let pie_proof = db.get_pie_proof(8).await.expect("Failed to get pie proof");
         assert_eq!(pie_proof, "pie_proof_data");
@@ -131,9 +127,7 @@ mod tests {
         db.insert_block(9, "query_9", ProverStatus::PieProofGenerated)
             .await
             .expect("Failed to insert block");
-        db.insert_pie_proof(9, "pie_proof_data")
-            .await
-            .expect("Failed to insert pie proof");
+        db.insert_pie_proof(9, "pie_proof_data").await.expect("Failed to insert pie proof");
         db.insert_bridge_proof(9, "bridge_proof_data")
             .await
             .expect("Failed to insert bridge proof");
@@ -148,16 +142,12 @@ mod tests {
         db.insert_block(10, "query_10", ProverStatus::PieSubmitted)
             .await
             .expect("Failed to insert block");
-        db.insert_pie_proof(10, "pie_proof_data_1")
-            .await
-            .expect("Failed to insert pie proof");
+        db.insert_pie_proof(10, "pie_proof_data_1").await.expect("Failed to insert pie proof");
 
         db.insert_block(11, "query_11", ProverStatus::PieSubmitted)
             .await
             .expect("Failed to insert block");
-        db.insert_pie_proof(11, "pie_proof_data_2")
-            .await
-            .expect("Failed to insert pie proof");
+        db.insert_pie_proof(11, "pie_proof_data_2").await.expect("Failed to insert pie proof");
 
         let proofs = db.list_proof().await.expect("Failed to list proofs");
 
@@ -165,6 +155,4 @@ mod tests {
         assert!(proofs.contains(&"pie_proof_data_1".to_string()));
         assert!(proofs.contains(&"pie_proof_data_2".to_string()));
     }
-
-
 }
