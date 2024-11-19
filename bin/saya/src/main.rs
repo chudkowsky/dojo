@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn print_intro(_config: &SayaConfig) {
+fn print_intro(config: &SayaConfig) {
     println!(
         "{}",
         Style::new().color256(94).apply_to(
@@ -42,13 +42,22 @@ fn print_intro(_config: &SayaConfig) {
         r"
 CONFIGURATION
 =============
+Settlement contract: {:#x}
+Settlement account: {:#x}
+Chain ID: {:#x},
+RPC url: {:#},
+
     ",
+        config.settlement_contract, config.starknet_account.signer_address,
+        config.starknet_account.chain_id, config.rpc_url.as_str()
     );
     println!(
         r"
 PROVER
 ==================
+Prover: {}
     ",
+        config.prover_url
     );
 
     println!(
