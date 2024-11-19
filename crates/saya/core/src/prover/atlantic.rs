@@ -1,9 +1,10 @@
-use herodotus_sharp_playground::models::{ProverVersion, SharpSdk};
+use atlantic_client::models::{AtlanticSdk, Layout, ProverVersion};
 use swiftness_proof_parser::{parse, StarkProof};
 use tracing::trace;
 use url::Url;
 
 use crate::db::sql_lite::SqliteDb;
+use crate::db::ProverStatus;
 use crate::errors::Error;
 
 const LAYOUT_BRIDGE: &[u8; 31478586] =
@@ -20,19 +21,20 @@ impl AtlanticProver {
         AtlanticProver { api_key, url, db }
     }
     pub async fn submit_proof_generation(&self, pie: Vec<u8>) -> Result<QueryId, Error> {
-        let base_url = "https://atlantic.api.herodotus.cloud";
-        let sdk = SharpSdk::new(self.api_key.clone(), base_url)?;
+        let sdk = AtlanticSdk::new(self.api_key.clone(), self.url.clone())?;
         let is_alive = sdk.get_is_alive().await?;
         if !is_alive {
             return Err(Error::ServerNotAliveError);
         }
-        let id =
-            sdk.proof_generation(pie, "dynamic", ProverVersion::Starkware).await?.sharp_query_id;
+
+        let id = sdk
+            .proof_generation(pie, Layout::Dynamic, ProverVersion::Starkware)
+            .await?
+            .sharp_query_id;
         Ok(id)
     }
     pub async fn submit_atlantic_query(&self, proof: String) -> Result<QueryId, Error> {
-        let base_url = "https://atlantic.api.herodotus.cloud";
-        let sdk = SharpSdk::new(self.api_key.clone(), base_url)?;
+        let sdk = AtlanticSdk::new(self.api_key.clone(), self.url.clone())?;
         let is_alive = sdk.get_is_alive().await?;
         if !is_alive {
             return Err(Error::ServerNotAliveError);
@@ -66,11 +68,10 @@ impl AtlanticProver {
         Ok(response_text)
     }
 
-    pub async fn check_query_status(&self, id: u32, query_id: &str) -> Result<bool, Error> {
+    pub async fn check_query_status(&self, id: u32, query_id: &str) -> Result<ProverStatus, Error> {
         trace!("Checking status for block {}, query_id {}", id, query_id);
 
-        let base_url = "https://atlantic.api.herodotus.cloud";
-        let sdk = SharpSdk::new(self.api_key.clone(), base_url)?;
+        let sdk = AtlanticSdk::new(self.api_key.clone(), self.url.clone())?;
 
         let is_alive = sdk.get_is_alive().await?;
         if !is_alive {
@@ -80,8 +81,16 @@ impl AtlanticProver {
         trace!("Checking status for query_id {}", query_id);
 
         let job_response = sdk.get_sharp_query_jobs(query_id).await?;
-        let status = !job_response.jobs.is_empty()
-            && job_response.jobs.iter().map(|job| job.status == "COMPLETED").all(|x| x);
-        Ok(status)
+        // Determine the ProverStatus
+        if job_response.jobs.is_empty() {
+            return Ok(ProverStatus::Proving); // No jobs found yet
+        }
+        if job_response.jobs.iter().any(|job| job.status == "FAILED") {
+            return Ok(ProverStatus::Failed); // If any job failed
+        }
+        if job_response.jobs.iter().all(|job| job.status == "COMPLETED") {
+            return Ok(ProverStatus::Proved); // All jobs completed
+        }
+        Ok(ProverStatus::Proving)
     }
 }

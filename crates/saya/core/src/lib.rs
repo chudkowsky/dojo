@@ -9,7 +9,7 @@ pub mod utlis;
 
 use cairo_vm::types::layout_name::LayoutName;
 use db::sql_lite::SqliteDb;
-use db::{ProverStatus, SayaProvingDb};
+use db::{BlockStatus, ProverStatus, SayaProvingDb};
 use errors::Error;
 use piltover::Piltover;
 use prove_block::prove_block;
@@ -109,6 +109,12 @@ impl Saya {
     /// Returns an `Error` if the pie generation or submission fails.
     async fn submit_pie(&self, mut shutdown_rx: broadcast::Receiver<()>) -> Result<(), Error> {
         let mut block_number = self.last_sent_for_prove_block + 1;
+        let blocks = self.db.list_blocks_with_status(BlockStatus::Failed).await?;
+        block_number = blocks
+            .iter()
+            .min_by_key(|block| block.id)
+            .map(|block| block.id)
+            .unwrap_or(block_number);
         let poll_interval_secs = 10;
         loop {
             tokio::select! {
@@ -117,7 +123,7 @@ impl Saya {
                     break Ok(());
                 }
                 _ = tokio::time::sleep(std::time::Duration::from_secs(poll_interval_secs))=>{
-                    if self.db.list_blocks_with_status(ProverStatus::PieSubmitted).await?.len() >= 3 {
+                    if self.db.list_blocks_with_status(BlockStatus::PieSubmitted).await?.len() >= 2 {
                         trace!("Too many pending blocks, waiting");
                     } else {
                         let mut rpc_url = self.config.rpc_url.clone().to_string();
@@ -135,7 +141,7 @@ impl Saya {
                         let pie = pie.to_bytes();
                         let query_id = self.prover.submit_proof_generation(pie).await?;
                         info!("Block status updated to PieSubmitted for block {}", block_number);
-                        self.db.insert_block(block_number, &query_id, ProverStatus::PieSubmitted).await?;
+                        self.db.insert_block(block_number, &query_id, BlockStatus::PieSubmitted).await?;
                         block_number += 1;
                     }
                 }
@@ -157,23 +163,30 @@ impl Saya {
         let poll_interval_secs = 10;
         loop {
             tokio::select! {
-                _ = shutdown_rx.recv() => {
-                    info!("Shutting down monitor_proof_status");
-                    break Ok(());
-                }
-                _ = tokio::time::sleep(std::time::Duration::from_secs(poll_interval_secs))=>{
-                    let pending_blocks =
-                    self.db.list_blocks_with_status(ProverStatus::PieSubmitted).await?;
-                    for block in pending_blocks {
-                        if self.prover.check_query_status(block.id, &block.query_id_step1).await? {
-                            let proof = self.prover.fetch_proof(&block.query_id_step1).await?;
-                            self.db.insert_pie_proof(block.id, &proof).await?;
-                            info!("Block status updated to PieProofGenerated for block {}", block.id);
-                        } else {
-                            trace!(
-                                "Some jobs are not completed for block {}, query_id {}",
-                                block.id, block.query_id_step1
-                            );
+                    _ = shutdown_rx.recv() => {
+                        info!("Shutting down monitor_proof_status");
+                        break Ok(());
+                    }
+                    _ = tokio::time::sleep(std::time::Duration::from_secs(poll_interval_secs))=>{
+                        let pending_blocks =
+                        self.db.list_blocks_with_status(BlockStatus::PieSubmitted).await?;
+                        for block in pending_blocks {
+                            match self.prover.check_query_status(block.id, &block.query_id_step1).await? {
+                            ProverStatus::Proved => {
+                                let proof = self.prover.fetch_proof(&block.query_id_step1).await?;
+                                self.db.insert_pie_proof(block.id, &proof).await?;
+                                info!("Block status updated to PieProofGenerated for block {}", block.id);
+                            }
+                            ProverStatus::Proving => {
+                                trace!(
+                                    "Some jobs are not completed for block {}, query_id {}",
+                                    block.id, block.query_id_step1
+                                );
+                            }
+                            ProverStatus::Failed => {
+                                //If job failed, we need to resubmit the proof
+                                self.db.update_block_status(block.id, BlockStatus::Failed).await?;
+                            }
                         }
                     }
                 }
@@ -205,7 +218,7 @@ impl Saya {
                 }
                 _ = tokio::time::sleep(std::time::Duration::from_secs(poll_interval_secs))=>{
                     let pie_generated_blocks =
-                    self.db.list_blocks_with_status(ProverStatus::PieProofGenerated).await?;
+                    self.db.list_blocks_with_status(BlockStatus::PieProofGenerated).await?;
                 for block in pie_generated_blocks {
                     let pie_proof = self.db.get_pie_proof(block.id).await?;
                     let query_id = self.prover.submit_atlantic_query(pie_proof).await?;
@@ -232,24 +245,31 @@ impl Saya {
         let poll_interval_secs = 10;
         loop {
             tokio::select! {
-                _ = shutdown_rx.recv() => {
-                    info!("Shutting down monitor_layout_bridge_status");
-                    break Ok(());
-                }
-                _ = tokio::time::sleep(std::time::Duration::from_secs(poll_interval_secs))=>{
-                    let blocks = self.db.list_blocks_with_status(ProverStatus::BridgeProofSubmited).await?;
-                    for block in blocks {
-                        if self.prover.check_query_status(block.id, &block.query_id_step2).await? {
-                            let proof = self.prover.fetch_proof(&block.query_id_step2).await?;
-                            self.db.insert_bridge_proof(block.id, &proof).await?;
-                            info!("Block status updated to Completed for block {}", block.id);
-                        } else {
-                            trace!(
-                                "Some jobs are not completed for block {}, query_id {}",
-                                block.id, block.query_id_step2
-                            );
-                        }
+                    _ = shutdown_rx.recv() => {
+                        info!("Shutting down monitor_layout_bridge_status");
+                        break Ok(());
                     }
+                    _ = tokio::time::sleep(std::time::Duration::from_secs(poll_interval_secs))=>{
+                        let blocks = self.db.list_blocks_with_status(BlockStatus::BridgeProofSubmited).await?;
+                        for block in blocks {
+                            match self.prover.check_query_status(block.id, &block.query_id_step2).await? {
+                                ProverStatus::Proved => {
+                                    let proof = self.prover.fetch_proof(&block.query_id_step2).await?;
+                                    self.db.insert_bridge_proof(block.id, &proof).await?;
+                                    info!("Block status updated to Completed for block {}", block.id);
+                                }
+                                ProverStatus::Proving => {
+                                    trace!(
+                                        "Some jobs are not completed for block {}, query_id {}",
+                                        block.id, block.query_id_step2
+                                    );
+                                }
+                                ProverStatus::Failed => {
+                                    //If job failed, we need to resubmit the proof
+                                    self.db.update_block_status(block.id, BlockStatus::PieProofGenerated).await?;
+                                }
+                            }
+                        }
                 }
             }
         }
@@ -269,18 +289,18 @@ impl Saya {
         loop {
             tokio::select! {
                 _ = shutdown_rx.recv() => {
-                    info!("Shutting down monitor_layout_bridge_status");
+                    info!("Shutting down settle_block");
                     break Ok(());
                 }
                 _ = tokio::time::sleep(std::time::Duration::from_secs(poll_interval_secs))=>{
-                    let blocks = self.db.list_blocks_with_status(ProverStatus::Completed).await?;
+                    let blocks = self.db.list_blocks_with_status(BlockStatus::Completed).await?;
                     let block = blocks.iter().find(|block| block.id == block_number);
                     if block.is_none() {
                         continue;
                     } else {
                         let pie_proof = self.db.get_pie_proof(block_number).await?;
                         let bridge_proof = self.db.get_bridge_proof(block_number).await?;
-                        self.piltover.update_state(pie_proof, bridge_proof).await?;
+                        self.piltover.update_state(pie_proof, bridge_proof,block_number).await?;
                         // remove block from db
                         // remove proofs from db
                         block_number += 1;
@@ -289,26 +309,4 @@ impl Saya {
             }
         }
     }
-}
-
-// #[tokio::test]
-// async fn test_saya_db() {
-//     let pool =
-// SqliteDb::new("/home/mateuszchudkowski/dev/cartdrige_dojo/blocks.db").await.unwrap();
-//     let blocks = pool.list_blocks().await.unwrap();
-//     for block in blocks {
-//         if block.id>280126{
-//             pool.update_block_status(block.id,ProverStatus::BridgeProofSubmited).await.unwrap();
-//         }
-//     }
-
-//     // println!("{:?}", blocks);
-//     // println!("{:?}", blocks);
-// }
-#[tokio::test]
-async fn test_saya_db() {
-    let pool = SqliteDb::new("/home/mateuszchudkowski/dev/cartdrige_dojo/blocks.db").await.unwrap();
-    // let blocks = pool.delete_block(280133).await.unwrap();
-    let blocks = pool.list_blocks().await.unwrap();
-    println!("{:#?}", blocks);
 }

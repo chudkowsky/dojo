@@ -1,3 +1,7 @@
+use starknet::accounts::single_owner::SignError;
+use starknet::accounts::AccountError;
+use starknet::signers::local_wallet::SignError as LocalSignError;
+
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error(transparent)]
@@ -33,9 +37,11 @@ pub enum Error {
     #[error(transparent)]
     UrlParseError(#[from] url::ParseError),
     #[error(transparent)]
-    SharpError(#[from] herodotus_sharp_playground::error::SharpSdkError),
+    SharpError(#[from] atlantic_client::error::AtlanticSdkError),
     #[error(transparent)]
     RequestError(#[from] reqwest::Error),
     #[error(transparent)]
     StarknetProviderError(#[from] starknet::providers::ProviderError),
+    #[error(transparent)]
+    StarknetTransactionError(#[from] AccountError<SignError<LocalSignError>>),
 }

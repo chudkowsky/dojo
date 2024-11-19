@@ -7,7 +7,7 @@ use starknet::providers::Provider;
 use starknet_crypto::poseidon_hash_many;
 use starknet_types_core::felt::Felt;
 use swiftness_proof_parser::{parse, StarkProof};
-use tracing::info;
+use tracing::{info, trace};
 
 use crate::errors::Error;
 use crate::retry;
@@ -32,15 +32,15 @@ pub struct PiltoverState {
 }
 
 impl Piltover {
-    pub async fn update_state(&self, pie_proof: String, bridge_proof: String) -> Result<(), Error> {
+    pub async fn update_state(&self, pie_proof: String, bridge_proof: String,block_number:u32) -> Result<(), Error> {
         let parsed_proof = parse(pie_proof)?;
         let program_snos_output = calculate_output(parsed_proof);
         let parsed_proof = parse(bridge_proof)?;
         let program_output = calculate_output(parsed_proof);
         let output_hash = poseidon_hash_many(&program_output);
         let snos_output_hash = poseidon_hash_many(&program_snos_output);
-        println!("{:?}", output_hash);
-        println!("{:?}", snos_output_hash);
+        trace!("layout bridge output_hash {:?}", output_hash);
+        trace!("snos pie output_hash {:?}", snos_output_hash);
 
         let piltover_calldata = PiltoverCalldata {
             program_snos_output,
@@ -59,9 +59,9 @@ impl Piltover {
                 }])
                 .nonce(nonce)
                 .send()
-        )
-        .unwrap(); //test this better 
-        info!("`update_state` piltover transaction sent to contract {:#x}", self.contract);
+        )?;
+
+        info!("Block {} settled on piltover contract {:#x}",block_number, self.contract);
         Ok(())
     }
 

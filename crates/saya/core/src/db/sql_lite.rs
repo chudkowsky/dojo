@@ -6,7 +6,7 @@ use sqlx::{query, Pool, Row, Sqlite};
 use tracing::trace;
 
 use super::Block;
-use crate::db::{ProverStatus, SayaProvingDb};
+use crate::db::{BlockStatus, SayaProvingDb};
 use crate::errors::Error;
 
 #[derive(Clone)]
@@ -77,7 +77,7 @@ impl SqliteDb {
             let query_id_step1 = row.get("query_id_step1");
             let query_id_step2 = row.get("query_id_step2");
             let status: &str = row.get("status");
-            let status = ProverStatus::try_from(status)?;
+            let status = BlockStatus::try_from(status)?;
             result.push(Block { id, query_id_step1, query_id_step2, status });
         }
         Ok(result)
@@ -107,24 +107,31 @@ impl SayaProvingDb for SqliteDb {
         let query_id_step1 = result.get("query_id_step1");
         let query_id_step2 = result.get("query_id_step2");
         let status: &str = result.get("status");
-        let status = ProverStatus::try_from(status)?;
+        let status = BlockStatus::try_from(status)?;
         Ok(Block { id, query_id_step1, query_id_step2, status })
     }
     async fn insert_block(
         &self,
         block_id: u32,
         query_id: &str,
-        status: ProverStatus,
+        status: BlockStatus,
     ) -> Result<(), Error> {
-        query("INSERT INTO blocks (id, query_id_step1, status) VALUES (?1, ?2, ?3)")
-            .bind(block_id)
-            .bind(query_id)
-            .bind(status.as_str())
-            .execute(&self.pool)
-            .await?;
+        query(
+            "INSERT INTO blocks (id, query_id_step1, status) 
+            VALUES (?1, ?2, ?3) 
+            ON CONFLICT(id) DO UPDATE SET 
+                query_id_step1 = excluded.query_id_step1,
+                status = excluded.status",
+        )
+        .bind(block_id)
+        .bind(query_id)
+        .bind(status.as_str())
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
-    async fn update_block_status(&self, block_id: u32, status: ProverStatus) -> Result<(), Error> {
+
+    async fn update_block_status(&self, block_id: u32, status: BlockStatus) -> Result<(), Error> {
         query("UPDATE blocks SET status = ?1 WHERE id = ?2")
             .bind(status.as_str())
             .bind(block_id)
@@ -146,7 +153,7 @@ impl SayaProvingDb for SqliteDb {
             .await?;
 
         query("UPDATE blocks SET status = ?1 WHERE id = ?2")
-            .bind(ProverStatus::BridgeProofSubmited.as_str())
+            .bind(BlockStatus::BridgeProofSubmited.as_str())
             .bind(block_id)
             .execute(&mut *transaction)
             .await?;
@@ -154,7 +161,7 @@ impl SayaProvingDb for SqliteDb {
         transaction.commit().await?;
         Ok(())
     }
-    async fn list_blocks_with_status(&self, status: ProverStatus) -> Result<Vec<Block>, Error> {
+    async fn list_blocks_with_status(&self, status: BlockStatus) -> Result<Vec<Block>, Error> {
         let rows = query(
             "SELECT id, query_id_step1, query_id_step2, status FROM blocks WHERE status = ?1",
         )
@@ -167,7 +174,7 @@ impl SayaProvingDb for SqliteDb {
             let query_id_step1 = row.get("query_id_step1");
             let query_id_step2 = row.get("query_id_step2");
             let status: &str = row.get("status");
-            let status = ProverStatus::try_from(status)?;
+            let status = BlockStatus::try_from(status)?;
             result.push(Block { id, query_id_step1, query_id_step2, status });
         }
         Ok(result)
@@ -180,7 +187,7 @@ impl SayaProvingDb for SqliteDb {
             .execute(&mut *transaction)
             .await?;
         query("UPDATE blocks SET status = ?1 WHERE id = ?2")
-        .bind(ProverStatus::PieProofGenerated.as_str())
+        .bind(BlockStatus::PieProofGenerated.as_str())
         .bind(block_id)
         .execute(&mut *transaction) // Use `&mut transaction` explicitly
         .await?;
@@ -200,7 +207,7 @@ impl SayaProvingDb for SqliteDb {
 
         // Update the status in the blocks table
         query("UPDATE blocks SET status = ?1 WHERE id = ?2")
-        .bind(ProverStatus::Completed.as_str())
+        .bind(BlockStatus::Completed.as_str())
         .bind(block_id)
         .execute(&mut *transaction) // Use `&mut transaction` explicitly
         .await?;
@@ -223,10 +230,10 @@ impl SayaProvingDb for SqliteDb {
         Ok(row.get("bridge_proof"))
     }
     async fn list_proof(&self) -> Result<Vec<String>, Error> {
-        let rows = query("SELECT bridge_proof FROM proofs").fetch_all(&self.pool).await?;
+        let rows = query("SELECT pie_proof FROM proofs").fetch_all(&self.pool).await?;
         let mut result = Vec::new();
         for row in rows {
-            result.push(row.get("bridge_proof"));
+            result.push(row.get("pie_proof"));
         }
         Ok(result)
     }
